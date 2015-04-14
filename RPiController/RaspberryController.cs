@@ -33,21 +33,27 @@ namespace RPiController
 
             switch (presence)
             {
-            case "DoNotDisturb":
-            case "Busy":
-                _conn[_redLed] = true;
-                break;
-            case "TemporarilyAway":
-            case "Away":
-            case "FreeIdle":
-            case "BusyIdle":
-                _conn[_yellowLed] = true;
-                break;
-            case "Free":
-                _conn[_greenLed] = true;
-                break;
-            default:
-                break;
+                case "DoNotDisturb":
+                case "Busy":
+                    _conn[_redLed] = true;
+                    break;
+                case "TemporarilyAway":
+                case "Away":
+                    _conn[_yellowLed] = true;
+                    break;
+                case "Free":
+                    _conn[_greenLed] = true;
+                    break;
+                case "FreeIdle":
+                    _conn[_greenLed] = true;
+                    _conn[_yellowLed] = true;
+                    break;
+                case "BusyIdle":                    
+                    _conn[_redLed] = true;
+                    _conn[_yellowLed] = true;
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -59,21 +65,21 @@ namespace RPiController
 
             switch (status)
             {
-            case QueueStatus.Ready:
-                Blink(_greenLed, 4);
-                Blink(_yellowLed, 4);
-                Blink(_redLed, 4);
-                break;
-            case QueueStatus.Error:
-                Blink(_redLed, 6);
-                System.Threading.Thread.Sleep(1000);
-                _conn[_redLed] = true;
-                break;
-            case QueueStatus.WaitingForNetwork:
-                Blink(_yellowLed, 2);
-                break;
-            default:
-                break;
+                case QueueStatus.Ready:
+                    Blink(_greenLed, 4);
+                    Blink(_yellowLed, 4);
+                    Blink(_redLed, 4);
+                    break;
+                case QueueStatus.Error:
+                    Blink(_redLed, 6);
+                    System.Threading.Thread.Sleep(1000);
+                    _conn[_redLed] = true;
+                    break;
+                case QueueStatus.WaitingForNetwork:
+                    Blink(_yellowLed, 2);
+                    break;
+                default:
+                    break;
             }
         }
 
