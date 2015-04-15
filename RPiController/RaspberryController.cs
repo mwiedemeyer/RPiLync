@@ -23,6 +23,10 @@ namespace RPiController
             _greenLed = ConnectorPin.P1Pin18.Output();
             _leds = new OutputPinConfiguration[] { _redLed, _greenLed, _yellowLed };
             _conn = new GpioConnection(_leds);
+
+            _conn[_greenLed] = true;
+            _conn[_yellowLed] = true;
+            _conn[_redLed] = true;
         }
 
         public void Set(string presence)

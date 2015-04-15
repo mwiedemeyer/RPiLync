@@ -34,7 +34,7 @@ namespace RPiController
         {
             try
             {
-                _queue = GetCloudQueue();
+                _queue = GetCloudQueue(ConfigurationManager.AppSettings["AzureQueueName"]);
             }
             catch
             {
@@ -46,6 +46,19 @@ namespace RPiController
             }
 
             var lastStatus = QueueStatus.Unknown;
+
+            try
+            {
+                var debugQueue = GetCloudQueue(ConfigurationManager.AppSettings["AzureDebugQueueName"]);
+                var addresses = Dns.GetHostAddresses(Dns.GetHostName());
+                for (int i = 0; i < addresses.Length; i++)
+                {
+                    var ip = addresses[i];
+                    debugQueue.AddMessage(new CloudQueueMessage(string.Format("IP address ({0}/{1}): {2}", i + 1, addresses.Length, ip.ToString())));
+                }
+            }
+            catch
+            { }
 
             while (true)
             {
@@ -77,13 +90,13 @@ namespace RPiController
             }
         }
 
-        private CloudQueue GetCloudQueue()
+        private CloudQueue GetCloudQueue(string name)
         {
             OperationContext.GlobalSendingRequest += OperationContext_GlobalSendingRequest;
             CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["AzureQueueConnectionString"]);
             CloudQueueClient cloudQueueClient = cloudStorageAccount.CreateCloudQueueClient();
 
-            CloudQueue queueReference = cloudQueueClient.GetQueueReference(ConfigurationManager.AppSettings["AzureQueueName"]);
+            CloudQueue queueReference = cloudQueueClient.GetQueueReference(name);
             queueReference.CreateIfNotExists();
             return queueReference;
         }
