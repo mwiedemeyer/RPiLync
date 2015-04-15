@@ -54,11 +54,11 @@ namespace RPiController
                 for (int i = 0; i < addresses.Length; i++)
                 {
                     var ip = addresses[i];
-                    debugQueue.AddMessage(new CloudQueueMessage(string.Format("IP address ({0}/{1}): {2}", i + 1, addresses.Length, ip.ToString())));
+                    debugQueue.AddMessage(new CloudQueueMessage(string.Format("IP address ({0}/{1}): {2}", i + 1, addresses.Length, ip.ToString())), TimeSpan.FromMinutes(60));
                 }
             }
-            catch
-            { }
+            catch (Exception ex)
+            { Console.WriteLine(ex.ToString()); }
 
             while (true)
             {
@@ -79,8 +79,9 @@ namespace RPiController
 
                     Thread.Sleep(2000);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Console.WriteLine(ex.ToString());
                     if (lastStatus != QueueStatus.Error)
                     {
                         OnStatusChange(QueueStatus.Error);
@@ -93,6 +94,7 @@ namespace RPiController
         private CloudQueue GetCloudQueue(string name)
         {
             OperationContext.GlobalSendingRequest += OperationContext_GlobalSendingRequest;
+
             CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["AzureQueueConnectionString"]);
             CloudQueueClient cloudQueueClient = cloudStorageAccount.CreateCloudQueueClient();
 
@@ -103,7 +105,8 @@ namespace RPiController
 
         void OperationContext_GlobalSendingRequest(object sender, RequestEventArgs e)
         {
-            e.Request.ContentLength = 0;
+            if (e.Request.ContentLength < 0)
+                e.Request.ContentLength = 0;
         }
     }
 
