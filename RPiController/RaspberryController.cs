@@ -1,6 +1,7 @@
 ﻿using Raspberry.IO.GeneralPurpose;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -10,51 +11,53 @@ namespace RPiController
 {
     internal class RaspberryController : IDisposable
     {
-        OutputPinConfiguration _redLed;
-        OutputPinConfiguration _greenLed;
-        OutputPinConfiguration _yellowLed;
-        OutputPinConfiguration[] _leds;
+        PinConfigMappings _mapping = new PinConfigMappings();
         GpioConnection _conn;
 
         public void Setup()
         {
-            _redLed = ConnectorPin.P1Pin12.Output();
-            _yellowLed = ConnectorPin.P1Pin16.Output();
-            _greenLed = ConnectorPin.P1Pin18.Output();
-            _leds = new OutputPinConfiguration[] { _redLed, _greenLed, _yellowLed };
-            _conn = new GpioConnection(_leds);
+            _conn = new GpioConnection();
 
-            _conn[_greenLed] = true;
-            _conn[_yellowLed] = true;
-            _conn[_redLed] = true;
+            var configKeys = ConfigurationManager.AppSettings.AllKeys.Where(p => p.StartsWith("UserPortMapping"));
+            foreach (var key in configKeys)
+            {
+                var user = key.Split(':')[1];
+                var ports = ConfigurationManager.AppSettings[key].Split(',');
+                var redPin = (ConnectorPin)Enum.Parse(typeof(ConnectorPin), ports[0]);
+                var yellowPin = (ConnectorPin)Enum.Parse(typeof(ConnectorPin), ports[1]);
+                var greenPin = (ConnectorPin)Enum.Parse(typeof(ConnectorPin), ports[2]);
+                var map = new PinConfigMapping(user, redPin, yellowPin, greenPin);
+                map.AddPinsToConnection(_conn);
+                _mapping.Add(map);
+            }
+
+            Blink(true, true, true, 5);
         }
 
-        public void Set(string presence)
+        public void Set(string user, string presence)
         {
-            _conn[_redLed] = false;
-            _conn[_yellowLed] = false;
-            _conn[_greenLed] = false;
+            var mapping = _mapping.GetByUser(user);
+
+            mapping.Set(false, false, false);
 
             switch (presence)
             {
                 case "DoNotDisturb":
                 case "Busy":
-                    _conn[_redLed] = true;
+                    mapping.Set(true, false, false);
                     break;
                 case "TemporarilyAway":
                 case "Away":
-                    _conn[_yellowLed] = true;
+                    mapping.Set(false, true, false);
                     break;
                 case "Free":
-                    _conn[_greenLed] = true;
+                    mapping.Set(false, false, true);
                     break;
                 case "FreeIdle":
-                    _conn[_greenLed] = true;
-                    _conn[_yellowLed] = true;
+                    mapping.Set(false, true, true);
                     break;
-                case "BusyIdle":                    
-                    _conn[_redLed] = true;
-                    _conn[_yellowLed] = true;
+                case "BusyIdle":
+                    mapping.Set(true, true, false);
                     break;
                 default:
                     break;
@@ -63,41 +66,41 @@ namespace RPiController
 
         public void SetStatus(QueueStatus status)
         {
-            _conn[_redLed] = false;
-            _conn[_yellowLed] = false;
-            _conn[_greenLed] = false;
+            _mapping.SetAll(false, false, false);
 
             switch (status)
             {
                 case QueueStatus.Ready:
-                    Blink(_greenLed, 4);
-                    Blink(_yellowLed, 4);
-                    Blink(_redLed, 4);
+                    Blink(true, true, true, 4);
                     break;
                 case QueueStatus.Error:
-                    Blink(_redLed, 6);
-                    System.Threading.Thread.Sleep(1000);
-                    _conn[_redLed] = true;
+                    Blink(true, false, false, 6);
                     break;
                 case QueueStatus.WaitingForNetwork:
-                    Blink(_yellowLed, 2);
+                    Blink(false, true, false, 3);
                     break;
                 default:
                     break;
             }
         }
 
-        private void Blink(OutputPinConfiguration _ledPin, int count)
+        private void Blink(bool red, bool yellow, bool green, int count)
         {
-            // GpioConnection.Blink does not work (on rpi2 at least?), so this is my own implementation
-            bool enable = true;
+            var isRed = red;
+            var isYellow = yellow;
+            var isGreen = green;
+
+            // GpioConnection.Blink does not work (on rpi2 at least?), so this is my own implementation            
             for (int i = 0; i < count * 2; i++)
             {
-                _conn[_ledPin] = enable;
+                _mapping.SetAll(red, yellow, green);
                 Thread.Sleep(250);
-                enable = !enable;
+                if (isRed) red = !red;
+                if (isYellow) yellow = !yellow;
+                if (isGreen) green = !green;
             }
-            _conn[_ledPin] = false;
+
+            _mapping.SetAll(false, false, false);
         }
 
         public void Dispose()

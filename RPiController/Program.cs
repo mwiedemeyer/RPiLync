@@ -42,9 +42,9 @@ namespace RPiController
 
         private static void Queue_NewMessageReceived(object sender, NewMessageEventArgs e)
         {
-            Console.WriteLine("-> Message received: {0}", e.Presence);
+            Console.WriteLine("-> Message received: User={0} Presence={1}", e.User, e.Presence);
 
-            _rpi.Set(e.Presence);
+            _rpi.Set(e.User, e.Presence);
         }
     }
 }

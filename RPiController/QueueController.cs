@@ -18,10 +18,14 @@ namespace RPiController
 
         private CloudQueue _queue;
 
-        protected void OnNewMessageReceived(string presence)
+        protected void OnNewMessageReceived(string message)
         {
+            var messageSplit = message.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+            var user = messageSplit[0];
+            var presence = messageSplit[1];
+
             if (NewMessageReceived != null)
-                NewMessageReceived(this, new NewMessageEventArgs(presence));
+                NewMessageReceived(this, new NewMessageEventArgs(presence, user));
         }
 
         protected void OnStatusChange(QueueStatus newStatus)
@@ -113,10 +117,12 @@ namespace RPiController
     public class NewMessageEventArgs : EventArgs
     {
         public string Presence { get; set; }
+        public string User { get; set; }
 
-        public NewMessageEventArgs(string presence)
+        public NewMessageEventArgs(string presence, string user)
         {
             Presence = presence;
+            User = user;
         }
     }
 

@@ -37,7 +37,8 @@ namespace LyncAdapter
 
         private void AddStatusToQueue(string newStatus)
         {
-            _cloudQueue.AddMessage(new CloudQueueMessage(newStatus), TimeSpan.FromMinutes(5));
+            var message = string.Format("{0}:{1}", ConfigurationManager.AppSettings["AzureQueueMessagePrefix"], newStatus);
+            _cloudQueue.AddMessage(new CloudQueueMessage(message), TimeSpan.FromMinutes(5));
         }
 
         private CloudQueue GetCloudQueue()
