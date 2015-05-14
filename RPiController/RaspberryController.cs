@@ -16,11 +16,14 @@ namespace RPiController
 
         public void Setup()
         {
+            Console.WriteLine("GpioConnection ctor");
             _conn = new GpioConnection();
+            Console.WriteLine("GpioConnection ctor called");
 
             var configKeys = ConfigurationManager.AppSettings.AllKeys.Where(p => p.StartsWith("UserPortMapping"));
             foreach (var key in configKeys)
             {
+                Console.WriteLine("Initializing {0}", key);
                 var user = key.Split(':')[1];
                 var ports = ConfigurationManager.AppSettings[key].Split(',');
                 var redPin = (ConnectorPin)Enum.Parse(typeof(ConnectorPin), ports[0]);
@@ -31,7 +34,7 @@ namespace RPiController
                 _mapping.Add(map);
             }
 
-            Blink(true, true, true, 5);
+            Blink(false, false, true, 5);
         }
 
         public void Set(string user, string presence)
@@ -42,25 +45,25 @@ namespace RPiController
 
             switch (presence)
             {
-                case "DoNotDisturb":
-                case "Busy":
-                    mapping.Set(true, false, false);
-                    break;
-                case "TemporarilyAway":
-                case "Away":
-                    mapping.Set(false, true, false);
-                    break;
-                case "Free":
-                    mapping.Set(false, false, true);
-                    break;
-                case "FreeIdle":
-                    mapping.Set(false, true, true);
-                    break;
-                case "BusyIdle":
-                    mapping.Set(true, true, false);
-                    break;
-                default:
-                    break;
+            case "DoNotDisturb":
+            case "Busy":
+                mapping.Set(true, false, false);
+                break;
+            case "TemporarilyAway":
+            case "Away":
+                mapping.Set(false, true, false);
+                break;
+            case "Free":
+                mapping.Set(false, false, true);
+                break;
+            case "FreeIdle":
+                mapping.Set(false, true, true);
+                break;
+            case "BusyIdle":
+                mapping.Set(true, true, false);
+                break;
+            default:
+                break;
             }
         }
 
@@ -70,17 +73,17 @@ namespace RPiController
 
             switch (status)
             {
-                case QueueStatus.Ready:
-                    Blink(true, true, true, 4);
-                    break;
-                case QueueStatus.Error:
-                    Blink(true, false, false, 6);
-                    break;
-                case QueueStatus.WaitingForNetwork:
-                    Blink(false, true, false, 3);
-                    break;
-                default:
-                    break;
+            case QueueStatus.Ready:
+                Blink(false, false, true, 4);
+                break;
+            case QueueStatus.Error:
+                Blink(true, false, false, 6);
+                break;
+            case QueueStatus.WaitingForNetwork:
+                Blink(false, true, false, 3);
+                break;
+            default:
+                break;
             }
         }
 

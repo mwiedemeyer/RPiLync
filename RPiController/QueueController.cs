@@ -77,8 +77,9 @@ namespace RPiController
                     var message = _queue.GetMessage();
                     if (message != null)
                     {
-                        OnNewMessageReceived(message.AsString);
+                        var msgString = message.AsString;
                         _queue.DeleteMessage(message);
+                        OnNewMessageReceived(msgString);
                     }
 
                     Thread.Sleep(2000);
