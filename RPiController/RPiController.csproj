@@ -81,6 +81,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Logger.cs" />
     <Compile Include="PinConfigMapping.cs" />
     <Compile Include="PinConfigMappings.cs" />
     <Compile Include="Program.cs" />

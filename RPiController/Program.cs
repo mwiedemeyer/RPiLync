@@ -17,7 +17,7 @@ namespace RPiController
             // seems to be required to work with Azure SSL on raspberry
             ServicePointManager.ServerCertificateValidationCallback = (a, b, c, d) => { return true; };
 
-            Console.WriteLine("Starting...");
+            Logger.LogInfo("Starting...");
 
             _rpi = new RaspberryController();
             _rpi.Setup();
@@ -26,7 +26,7 @@ namespace RPiController
             _queue.NewMessageReceived += Queue_NewMessageReceived;
             _queue.StatusChange += Queue_StatusChange;
 
-            Console.WriteLine("... succeeded. Waiting for messages...");
+            Logger.LogInfo("... succeeded. Waiting for messages...");
 
             _queue.StartLoop();
 
@@ -35,14 +35,14 @@ namespace RPiController
 
         static void Queue_StatusChange(object sender, StatusChangeEventArgs e)
         {
-            Console.WriteLine("-> Status changed: {0}", e.Status);
+            Logger.LogInfo($"-> Status changed: {e.Status}");
 
             _rpi.SetStatus(e.Status);
         }
 
         private static void Queue_NewMessageReceived(object sender, NewMessageEventArgs e)
         {
-            Console.WriteLine("-> Message received: User={0} Presence={1}", e.User, e.Presence);
+            Logger.LogInfo($"-> Message received: User={e.User} Presence={e.Presence}");
 
             _rpi.Set(e.User, e.Presence);
         }

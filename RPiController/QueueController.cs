@@ -40,8 +40,9 @@ namespace RPiController
             {
                 _queue = GetCloudQueue(ConfigurationManager.AppSettings["AzureQueueName"]);
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.LogError(ex.ToString());
                 // Maybe the network is not yet available, so try again in 5 seconds
                 OnStatusChange(QueueStatus.WaitingForNetwork);
                 Thread.Sleep(5000);
@@ -62,7 +63,9 @@ namespace RPiController
                 }
             }
             catch (Exception ex)
-            { Console.WriteLine(ex.ToString()); }
+            {
+                Logger.LogError("Adding IP to debug queue failed: " + ex.ToString());
+            }
 
             while (true)
             {
@@ -86,7 +89,7 @@ namespace RPiController
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    Logger.LogError(ex.ToString());
                     if (lastStatus != QueueStatus.Error)
                     {
                         OnStatusChange(QueueStatus.Error);
